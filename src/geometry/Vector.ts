@@ -1,12 +1,4 @@
 export class Vector {
-  static _temp = [
-    new Vector(),
-    new Vector(),
-    new Vector(),
-    new Vector(),
-    new Vector(),
-    new Vector(),
-  ];
   constructor(public x = 0, public y = 0) {
   }
   static create(x = 0, y = 0): Vector {
