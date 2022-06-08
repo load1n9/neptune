@@ -11,7 +11,7 @@ export interface IVertex extends IVector {
   body: IBody | null;
   isInternal?: boolean;
 }
-type IAxes = IVector[];
+export type IAxes = IVector[];
 export interface IBody {
   id: number;
   type: string;
@@ -72,9 +72,9 @@ export interface IBody {
   bounds: any;
   // deno-lint-ignore no-explicit-any
   chamfer: any;
-  circleRadius: number;
-  positionPrev: number | null;
-  anglePrev: 0;
+  circleRadius: number | null;
+  positionPrev: IVector | null;
+  anglePrev: number;
   // deno-lint-ignore no-explicit-any
   parent: any;
   axes: IAxes;
@@ -83,6 +83,8 @@ export interface IBody {
   inertia: number;
   // deno-lint-ignore no-explicit-any
   _original: any;
+  inverseMass?: number;
+  inverseInertia?: number;
 }
 export interface IBounds { 
   min: IVector, 

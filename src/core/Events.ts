@@ -35,7 +35,7 @@ export class Events {
       object.events[names[i]] = newCallbacks;
     }
   }
-  trigger(object: any, eventNames: string, event?: any) {
+  static trigger(object: any, eventNames: string, event?: any) {
     let names;
     let name;
     let callbacks;

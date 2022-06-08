@@ -24,7 +24,7 @@ export class Vertices {
     });
     return Vertices.create(points, body);
   }
-  static centroid(vertices: IVertex[]) {
+  static centre(vertices: IVertex[]) {
     const area = Vertices.area(vertices, true);
     let centroid = Vector.create();
     let cross: number;
@@ -134,7 +134,7 @@ export class Vertices {
     if (scaleX === 1 && scaleY === 1) {
       return vertices;
     }
-    point = point || Vertices.centroid(vertices);
+    point = point || Vertices.centre(vertices);
     let vertex;
     let delta;
     for (let i = 0; i < vertices.length; i++) {

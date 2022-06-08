@@ -36,34 +36,69 @@ export class Sleeping {
       }
     }
   }
-// deno-lint-ignore no-explicit-any
-afterCollisions(pairs: any[], timeScale: number) {
-        const timeFactor = timeScale * timeScale * timeScale;
+  // deno-lint-ignore no-explicit-any
+  static afterCollisions(pairs: any[], timeScale: number) {
+    const timeFactor = timeScale * timeScale * timeScale;
 
-        // wake up bodies involved in collisions
-        for (let i = 0; i < pairs.length; i++) {
-            const pair = pairs[i];
-            
-            // don't wake inactive pairs
-            if (!pair.isActive)
-                continue;
+    for (let i = 0; i < pairs.length; i++) {
+      const pair = pairs[i];
+      if (!pair.isActive) {
+        continue;
+      }
 
-            var collision = pair.collision,
-                bodyA = collision.bodyA.parent, 
-                bodyB = collision.bodyB.parent;
-        
-            // don't wake if at least one body is static
-            if ((bodyA.isSleeping && bodyB.isSleeping) || bodyA.isStatic || bodyB.isStatic)
-                continue;
-        
-            if (bodyA.isSleeping || bodyB.isSleeping) {
-                var sleepingBody = (bodyA.isSleeping && !bodyA.isStatic) ? bodyA : bodyB,
-                    movingBody = sleepingBody === bodyA ? bodyB : bodyA;
+      const collision = pair.collision;
+      const bodyA = collision.bodyA.parent;
+      const bodyB = collision.bodyB.parent;
+      if (
+        (bodyA.isSleeping && bodyB.isSleeping) || bodyA.isStatic ||
+        bodyB.isStatic
+      ) {
+        continue;
+      }
 
-                if (!sleepingBody.isStatic && movingBody.motion > Sleeping._motionWakeThreshold * timeFactor) {
-                    Sleeping.set(sleepingBody, false);
-                }
-            }
+      if (bodyA.isSleeping || bodyB.isSleeping) {
+        const sleepingBody = (bodyA.isSleeping && !bodyA.isStatic)
+            ? bodyA
+            : bodyB,
+          movingBody = sleepingBody === bodyA ? bodyB : bodyA;
+
+        if (
+          !sleepingBody.isStatic &&
+          movingBody.motion > Sleeping._motionWakeThreshold * timeFactor
+        ) {
+          Sleeping.set(sleepingBody, false);
         }
-    };
+      }
+    }
+  }
+  static set(body: IBody, isSleeping = false) {
+    const wasSleeping = body.isSleeping;
+
+    if (isSleeping) {
+      body.isSleeping = true;
+      body.sleepCounter = body.sleepThreshold;
+
+      body.positionImpulse.x = 0;
+      body.positionImpulse.y = 0;
+
+      body.positionPrev!.x = body.position.x;
+      body.positionPrev!.y = body.position.y;
+
+      body.anglePrev = body.angle;
+      body.speed = 0;
+      body.angularSpeed = 0;
+      body.motion = 0;
+
+      if (!wasSleeping) {
+        Events.trigger(body, "sleepStart");
+      }
+    } else {
+      body.isSleeping = false;
+      body.sleepCounter = 0;
+
+      if (wasSleeping) {
+        Events.trigger(body, "sleepEnd");
+      }
+    }
+  }
 }
