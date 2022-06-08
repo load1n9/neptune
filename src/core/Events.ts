@@ -12,7 +12,7 @@ export class Events {
     }
     return callback;
   }
-  static off(object: any, eventNames: string, callback: any) {
+  static off(object: any, eventNames?: string, callback?: any) {
     if (!eventNames) {
       object.events = {};
       return;
@@ -22,11 +22,9 @@ export class Events {
       eventNames = Common.keys(object.events).join(" ");
     }
     const names = eventNames.split(" ");
-
     for (let i = 0; i < names.length; i++) {
       const callbacks = object.events[names[i]];
       const newCallbacks = [];
-
       if (callback && callbacks) {
         for (let j = 0; j < callbacks.length; j++) {
           if (callbacks[j] !== callback) {
@@ -34,21 +32,22 @@ export class Events {
           }
         }
       }
-
       object.events[names[i]] = newCallbacks;
     }
   }
-  static trigger(object: any, eventNames: string, event?: any) {
+  trigger(object: any, eventNames: string, event?: any) {
     let names;
     let name;
     let callbacks;
     let eventClone;
+
     const events = object.events;
+
     if (events && Common.keys(events).length > 0) {
-      if (!event) {
-        event = {};
-      }
+      event = event ?? {};
+
       names = eventNames.split(" ");
+
       for (let i = 0; i < names.length; i++) {
         name = names[i];
         callbacks = events[name];

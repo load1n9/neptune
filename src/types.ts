@@ -37,6 +37,7 @@ export interface IBody {
   isSleeping: boolean;
   motion: number;
   sleepThreshold: number;
+  sleepCounter?: number;
   density: number;
   restitution: number;
   friction: number;
