@@ -86,7 +86,28 @@ export interface IBody {
   inverseMass?: number;
   inverseInertia?: number;
 }
-export interface IBounds { 
-  min: IVector, 
-  max: IVector
+export interface IBounds {
+  min: IVector;
+  max: IVector;
+}
+export interface IComposite {
+  id: number;
+  type: string;
+  // deno-lint-ignore no-explicit-any
+  parent: any;
+  isModified: boolean;
+  bodies: IBody[];
+  // deno-lint-ignore no-explicit-any
+  constraints: any[];
+  // deno-lint-ignore no-explicit-any
+  composites: any[];
+  label: string;
+  cache: {
+    // deno-lint-ignore no-explicit-any
+    allBodies: any;
+    // deno-lint-ignore no-explicit-any
+    allConstraints: any;
+    // deno-lint-ignore no-explicit-any
+    allComposites: any;
+  };
 }
