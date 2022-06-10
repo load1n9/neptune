@@ -3,6 +3,7 @@ import { Collision } from "./Collision.ts";
 import { Bounds } from "../geometry/Bounds.ts";
 import { Vector } from "../geometry/Vector.ts";
 import { Vertices } from "../geometry/Vertices.ts";
+import { Bodies } from "../factory/Bodies.ts"
 
 export class Query {
   static collides(body: IBody, bodies: IBody[]): ICollision[] {
