@@ -11,7 +11,7 @@ export class Body {
   static _nextCollidingGroupId = 1;
   static _nextNonCollidingGroupId = -1;
   static _nextCategory = 0x0001;
-  static create(options?: Partial<IBody>) {
+  static create(options?: Partial<IBody>): IBody {
     const defaults = {
       id: Common.nextId(),
       type: "body",
