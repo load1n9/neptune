@@ -3,7 +3,7 @@ import { Common } from "../core/Common.ts";
 import { Collision } from "./Collision.ts";
 
 export class Detector {
-  static create(options: Partial<IDetector>): IDetector {
+  static create(options: Partial<IDetector> = {}): IDetector {
     return Common.extend({
       bodies: [],
       pairs: null,

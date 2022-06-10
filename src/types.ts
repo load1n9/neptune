@@ -176,3 +176,25 @@ export interface IDetector {
   bodies: IBody[];
   pairs: IPairs | null;
 }
+
+export interface IEngine {
+  positionIterations: number;
+  velocityIterations: number;
+  constraintIterations: number;
+  enableSleeping: boolean;
+  // deno-lint-ignore no-explicit-any
+  events: any[];
+  // deno-lint-ignore no-explicit-any
+  plugin: any;
+  gravity: {
+    x: number
+    y: number
+    scale: number
+  };
+  timing: {
+    timestamp: number;
+    timeScale: number;
+    lastDelta: number;
+    lastElapsed: number;
+  };
+}

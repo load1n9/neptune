@@ -3,7 +3,7 @@ import { Common } from "../core/Common.ts";
 import { Pair } from "./Pair.ts";
 
 export class Pairs {
-  static create(options: Partial<IPairs>): IPairs {
+  static create(options: Partial<IPairs> = {}): IPairs {
     return Common.extend({
       table: {},
       list: [],
