@@ -129,7 +129,6 @@ export class Resolver {
           const impulseY = normal.y * normalImpulse +
             tangent.y * tangentImpulse;
 
-          // apply impulse from contact
           if (!(bodyA.isStatic || bodyA.isSleeping)) {
             bodyA.positionPrev.x += impulseX * bodyA.inverseMass;
             bodyA.positionPrev.y += impulseY * bodyA.inverseMass;
@@ -147,6 +146,147 @@ export class Resolver {
               (contactVertex.y - bodyB.position.y) * impulseX
             );
           }
+        }
+      }
+    }
+  }
+  static solveVelocity(pairs: IPair[], timeScale: number) {
+    const timeScaleSquared = timeScale * timeScale;
+    const restingThresh = Resolver.#restingThresh * timeScaleSquared;
+    const frictionNormalMultiplier = Resolver.#frictionNormalMultiplier;
+    const restingThreshTangent = Resolver.#restingThreshTangent *
+      timeScaleSquared;
+    const NumberMaxValue = Number.MAX_VALUE;
+    let tangentImpulse;
+    let maxFriction;
+
+    for (const pair of pairs) {
+      if (!pair.isActive || pair.isSensor) {
+        continue;
+      }
+
+      const collision = pair.collision;
+      const bodyA = collision.parentA;
+      const bodyB = collision.parentB;
+      const bodyAVelocity = bodyA.velocity;
+      const bodyBVelocity = bodyB.velocity;
+      const normalX = collision.normal.x;
+      const normalY = collision.normal.y;
+      const tangentX = collision.tangent.x;
+      const tangentY = collision.tangent.y;
+      const contacts = pair.activeContacts;
+      const contactsLength = contacts.length;
+      const contactShare = 1 / contactsLength;
+      const inverseMassTotal = bodyA.inverseMass + bodyB.inverseMass;
+      const friction = pair.friction * pair.frictionStatic *
+        frictionNormalMultiplier * timeScaleSquared;
+
+      bodyAVelocity.x = bodyA.position.x - bodyA.positionPrev.x;
+      bodyAVelocity.y = bodyA.position.y - bodyA.positionPrev.y;
+      bodyBVelocity.x = bodyB.position.x - bodyB.positionPrev.x;
+      bodyBVelocity.y = bodyB.position.y - bodyB.positionPrev.y;
+      bodyA.angularVelocity = bodyA.angle - bodyA.anglePrev;
+      bodyB.angularVelocity = bodyB.angle - bodyB.anglePrev;
+
+      for (const contact of contacts) {
+        const contactVertex = contact.vertex;
+
+        const offsetAX = contactVertex.x - bodyA.position.x;
+        const offsetAY = contactVertex.y - bodyA.position.y;
+        const offsetBX = contactVertex.x - bodyB.position.x;
+        const offsetBY = contactVertex.y - bodyB.position.y;
+
+        const velocityPointAX = bodyAVelocity.x -
+          offsetAY * bodyA.angularVelocity;
+        const velocityPointAY = bodyAVelocity.y +
+          offsetAX * bodyA.angularVelocity;
+        const velocityPointBX = bodyBVelocity.x -
+          offsetBY * bodyB.angularVelocity;
+        const velocityPointBY = bodyBVelocity.y +
+          offsetBX * bodyB.angularVelocity;
+
+        const relativeVelocityX = velocityPointAX - velocityPointBX;
+        const relativeVelocityY = velocityPointAY - velocityPointBY;
+
+        const normalVelocity = normalX * relativeVelocityX +
+          normalY * relativeVelocityY;
+        const tangentVelocity = tangentX * relativeVelocityX +
+          tangentY * relativeVelocityY;
+
+        const normalOverlap = pair.separation + normalVelocity;
+        let normalForce = Math.min(normalOverlap, 1);
+        normalForce = normalOverlap < 0 ? 0 : normalForce;
+
+        const frictionLimit = normalForce * friction;
+
+        if (
+          tangentVelocity > frictionLimit || -tangentVelocity > frictionLimit
+        ) {
+          maxFriction = tangentVelocity > 0
+            ? tangentVelocity
+            : -tangentVelocity;
+          tangentImpulse = pair.friction * (tangentVelocity > 0 ? 1 : -1) *
+            timeScaleSquared;
+
+          if (tangentImpulse < -maxFriction) {
+            tangentImpulse = -maxFriction;
+          } else if (tangentImpulse > maxFriction) {
+            tangentImpulse = maxFriction;
+          }
+        } else {
+          tangentImpulse = tangentVelocity;
+          maxFriction = NumberMaxValue;
+        }
+
+        const oAcN = offsetAX * normalY - offsetAY * normalX;
+        const oBcN = offsetBX * normalY - offsetBY * normalX;
+        const share = contactShare /
+          (inverseMassTotal + bodyA.inverseInertia * oAcN * oAcN +
+            bodyB.inverseInertia * oBcN * oBcN);
+
+        let normalImpulse = (1 + pair.restitution) * normalVelocity * share;
+        tangentImpulse *= share;
+
+        if (
+          normalVelocity * normalVelocity > restingThresh && normalVelocity < 0
+        ) {
+          contact.normalImpulse = 0;
+        } else {
+          const contactNormalImpulse = contact.normalImpulse;
+          contact.normalImpulse += normalImpulse;
+          contact.normalImpulse = Math.min(contact.normalImpulse, 0);
+          normalImpulse = contact.normalImpulse - contactNormalImpulse;
+        }
+
+        if (tangentVelocity * tangentVelocity > restingThreshTangent) {
+          contact.tangentImpulse = 0;
+        } else {
+          const contactTangentImpulse = contact.tangentImpulse;
+          contact.tangentImpulse += tangentImpulse;
+          if (contact.tangentImpulse < -maxFriction) {
+            contact.tangentImpulse = -maxFriction;
+          }
+          if (contact.tangentImpulse > maxFriction) {
+            contact.tangentImpulse = maxFriction;
+          }
+          tangentImpulse = contact.tangentImpulse - contactTangentImpulse;
+        }
+
+        const impulseX = normalX * normalImpulse + tangentX * tangentImpulse;
+        const impulseY = normalY * normalImpulse + tangentY * tangentImpulse;
+
+        if (!(bodyA.isStatic || bodyA.isSleeping)) {
+          bodyA.positionPrev.x += impulseX * bodyA.inverseMass;
+          bodyA.positionPrev.y += impulseY * bodyA.inverseMass;
+          bodyA.anglePrev += (offsetAX * impulseY - offsetAY * impulseX) *
+            bodyA.inverseInertia;
+        }
+
+        if (!(bodyB.isStatic || bodyB.isSleeping)) {
+          bodyB.positionPrev.x -= impulseX * bodyB.inverseMass;
+          bodyB.positionPrev.y -= impulseY * bodyB.inverseMass;
+          bodyB.anglePrev -= (offsetBX * impulseY - offsetBY * impulseX) *
+            bodyB.inverseInertia;
         }
       }
     }
