@@ -111,3 +111,63 @@ export interface IComposite {
     allComposites: any;
   };
 }
+
+export interface IPair {
+  id: string;
+  bodyA: IBody;
+  bodyB: IBody;
+  // deno-lint-ignore no-explicit-any
+  collision: any;
+  // deno-lint-ignore no-explicit-any
+  contacts: any[];
+  // deno-lint-ignore no-explicit-any
+  activeContacts: any[];
+  separation: number;
+  isActive: boolean;
+  confirmedActive: boolean;
+  isSensor: boolean;
+  timeCreated: number;
+  timeUpdated: number;
+  inverseMass: number;
+  friction: number;
+  frictionStatic: number;
+  restitution: number;
+  slop: number;
+}
+export interface IPairs {
+  // deno-lint-ignore no-explicit-any
+  table: any;
+  list: IPair[];
+  collisionStart: IPair[];
+  collisionActive: IPair[];
+  collisionEnd: IPair[];
+}
+export interface IContact {
+  vertex: IVertex;
+  normalImpulse: number;
+  tangentImpulse: number;
+}
+
+export interface ICollision {
+  pair: IPair | null;
+  collided: boolean;
+  bodyA: IBody;
+  bodyB: IBody;
+  parentA: IBody;
+  parentB: IBody;
+  depth: number;
+  normal: IVector;
+  tangent: IVector;
+  penetration: IVector;
+  supports: IVector[];
+}
+
+export interface IOverlap {
+  overlap: number;
+  axis: IVector | null;
+}
+
+export interface IProjection {
+  min: number;
+  max: number;
+}
