@@ -305,6 +305,6 @@ export class Common {
   }
 
   static getDecomp() {
-    return null;
+    return Common._decomp;
   }
 }

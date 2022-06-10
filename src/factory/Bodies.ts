@@ -3,7 +3,7 @@ import { Common } from "../core/Common.ts";
 import { Body } from "../body/Body.ts";
 import { Bounds } from "../geometry/Bounds.ts";
 import { Vector } from "../geometry/Vector.ts";
-import { IBody } from "../types.ts";
+import { IBody, IVertex } from "../types.ts";
 
 export class Bodies {
   static rectangle(
@@ -91,7 +91,6 @@ export class Bodies {
     options: any = {},
     maxSides = 25,
   ): IBody {
-
     const circle = {
       label: "Circle Body",
       circleRadius: radius,
@@ -156,5 +155,136 @@ export class Bodies {
     }
 
     return Body.create(Common.extend({}, polygon, options));
+  }
+  static fromVertices(
+    x: number,
+    y: number,
+    // deno-lint-ignore no-explicit-any
+    vertexSets: any[],
+    // deno-lint-ignore no-explicit-any
+    options: any = {},
+    flagInternal = false,
+    // deno-lint-ignore no-explicit-any
+    removeCollinear: any = 0.01,
+    minimumArea = 10,
+    // deno-lint-ignore no-explicit-any
+    removeDuplicatePoints: any = 0.01,
+  ) {
+    const decomp = Common.getDecomp();
+    let body;
+    let isConvex;
+    let isConcave;
+    let vertices;
+    let i;
+    let j;
+    let k;
+    let v;
+    let z;
+
+    const canDecomp = Boolean(decomp && decomp.quickDecomp);
+
+    // deno-lint-ignore no-explicit-any
+    const parts: any[] = [];
+
+    if (!Common.isArray(vertexSets[0])) {
+      vertexSets = [vertexSets];
+    }
+
+    for (v = 0; v < vertexSets.length; v += 1) {
+      vertices = vertexSets[v];
+      isConvex = Vertices.isConvex(vertices);
+      isConcave = !isConvex;
+
+      if (isConcave && !canDecomp) {
+        Common.warnOnce(
+          "Bodies.fromVertices: Install the 'poly-decomp' library and use Common.setDecomp or provide 'decomp' as a global to decompose concave vertices.",
+        );
+      }
+
+      if (isConvex || !canDecomp) {
+        vertices = isConvex
+          ? Vertices.clockwiseSort(vertices)
+          : Vertices.hull(vertices);
+
+        parts.push({
+          position: { x: x, y: y },
+          vertices: vertices,
+        });
+      } else {
+        const concave = vertices.map((vertex: IVertex) => [vertex.x, vertex.y]);
+
+        decomp.makeCCW(concave);
+        if (removeCollinear !== false) {
+          decomp.removeCollinearPoints(concave, removeCollinear);
+        }
+        if (removeDuplicatePoints !== false && decomp.removeDuplicatePoints) {
+          decomp.removeDuplicatePoints(concave, removeDuplicatePoints);
+        }
+
+        const decomposed = decomp.quickDecomp(concave);
+
+        for (i = 0; i < decomposed.length; i++) {
+          const chunk = decomposed[i];
+
+          const chunkVertices = chunk.map((vertices: IVertex[]) => {
+            return {
+              x: vertices[0],
+              y: vertices[1],
+            };
+          });
+
+          if (minimumArea > 0 && Vertices.area(chunkVertices) < minimumArea) {
+            continue;
+          }
+          parts.push({
+            position: Vertices.centre(chunkVertices),
+            vertices: chunkVertices,
+          });
+        }
+      }
+    }
+
+    for (i = 0; i < parts.length; i++) {
+      parts[i] = Body.create(Common.extend(parts[i], options));
+    }
+
+    if (flagInternal) {
+      const coincident_max_dist = 5;
+
+      for (i = 0; i < parts.length; i++) {
+        const partA = parts[i];
+
+        for (j = i + 1; j < parts.length; j++) {
+          const partB = parts[j];
+
+          if (Bounds.overlaps(partA.bounds, partB.bounds)) {
+            const pav = partA.vertices;
+            const  pbv = partB.vertices;
+
+            for (k = 0; k < partA.vertices.length; k++) {
+              for (z = 0; z < partB.vertices.length; z++) {
+                const da = Vector.magnitudeSquared(
+                    Vector.subtract(pav[(k + 1) % pav.length], pbv[z]),
+                  );
+                const db = Vector.magnitudeSquared(
+                    Vector.subtract(pav[k], pbv[(z + 1) % pbv.length]),
+                  );
+                if (da < coincident_max_dist && db < coincident_max_dist) {
+                  pav[k].isInternal = true;
+                  pbv[z].isInternal = true;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    if (parts.length > 1) {
+      body = Body.create(Common.extend({ parts: parts.slice(0) }, options));
+      Body.setPosition(body, { x: x, y: y });
+      return body;
+    } else {
+      return parts[0];
+    }
   }
 }
