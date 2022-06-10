@@ -171,3 +171,8 @@ export interface IProjection {
   min: number;
   max: number;
 }
+
+export interface IDetector {
+  bodies: IBody[];
+  pairs: IPairs | null;
+}
