@@ -164,7 +164,7 @@ export interface ICollision {
 
 export interface IOverlap {
   overlap: number;
-  axis: IVector | null;
+  axis: IVector;
 }
 
 export interface IProjection {

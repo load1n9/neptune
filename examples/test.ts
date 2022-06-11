@@ -1,26 +1,17 @@
-# 🔱 Neptune
-
-Rigid body library loosely ported from
-[Matter.js](https://github.com/liabru/matter-js)
-
-## Demo
-
-
-```ts
-import { Bodies, Composite, Engine, Runner } from "./mod.ts";
-import { NekoRenderer } from "./renderers/NekoRenderer.ts";
+import { Bodies, Composite, Engine, Runner } from "../mod.ts";
+import { NekoRenderer } from "../renderers/NekoRenderer.ts";
 
 const engine = Engine.create();
 const renderer = NekoRenderer.create({
-    engine: engine,
+  engine: engine,
   options: {
-      width: 800,
+    width: 800,
     height: 600,
     showAngleIndicator: true,
   },
 });
 Composite.add(engine.world, [
-    // walls
+  // walls
   Bodies.rectangle(400, 0, 800, 50, { isStatic: true }),
   Bodies.rectangle(400, 600, 800, 50, { isStatic: true }),
   Bodies.rectangle(800, 300, 50, 600, { isStatic: true }),
@@ -30,7 +21,7 @@ Composite.add(engine.world, [
   Bodies.rectangle(450, 50, 80, 80),
 ]);
 NekoRenderer.lookAt(renderer, {
-    min: { x: 0, y: 0 },
+  min: { x: 0, y: 0 },
   max: { x: 800, y: 600 },
 });
 
@@ -38,5 +29,3 @@ NekoRenderer.run(renderer);
 const runner = Runner.create();
 
 Runner.run(runner, engine);
-```
-<img src="./assets/neptune.gif" />

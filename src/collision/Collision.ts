@@ -16,11 +16,11 @@ export class Collision {
   static #supports: IVector[] = [];
   static #overlapAB: IOverlap = {
     overlap: 0,
-    axis: null,
+    axis: { x: 100, y: 100 },
   };
   static #overlapBA: IOverlap = {
-    overlap: 0,
-    axis: null,
+    overlap: 100,
+    axis: { x: 1, y: 1 },
   };
 
   static create(bodyA: IBody, bodyB: IBody): ICollision {
@@ -77,8 +77,8 @@ export class Collision {
     const normal = collision.normal;
     const supports = collision.supports;
     const minAxis = minOverlap.axis;
-    const minAxisX = minAxis!.x;
-    const minAxisY = minAxis!.y;
+    const minAxisX = minAxis.x;
+    const minAxisY = minAxis.y;
 
     if (
       minAxisX * (bodyB.position.x - bodyA.position.x) +
