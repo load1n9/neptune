@@ -17,6 +17,7 @@ export * from "./src/core/Common.ts";
 export * from "./src/core/Sleeping.ts";
 export * from "./src/core/Events.ts";
 export * from "./src/factory/Bodies.ts";
+export * from "./src/factory/Composites.ts";
 export * from "./src/geometry/Axes.ts";
 export * from "./src/geometry/Bounds.ts";
 export * from "./src/geometry/Vertices.ts";
